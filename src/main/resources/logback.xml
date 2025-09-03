@@ -7,7 +7,9 @@
   </appender>
 
   <!-- Bridge to OpenTelemetry: forwards Logback events into OTEL logs -->
-  <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender" />
+  <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+  	<otelResource service.name="azure-function"/>
+  </appender>
 
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>

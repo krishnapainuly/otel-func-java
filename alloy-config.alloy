@@ -1,53 +1,20 @@
-// Receive OTLP from your app
+// OTLP receiver
 otelcol.receiver.otlp "in" {
   grpc { endpoint = "0.0.0.0:4317" }
   http { endpoint = "0.0.0.0:4318" }
 }
 
-// ---- Tempo (traces) ----
-otelcol.exporter.otlp "tempo" {
-  client {
-    endpoint = "http://tempo:4317" // or Grafana Cloud endpoint
-    tls { insecure = true }
-  }
+// Tempo exporter (traces)
+otelcol.exporter.otlphttp "tempo" {
+  client { endpoint = "http://tempo:3200" }
 }
 
-// ---- Loki (logs) ----
+// Loki exporter (logs)
 loki.write "loki" {
-  endpoint {
-    url = "http://loki:3100/loki/api/v1/push" // or Grafana Cloud Loki push endpoint
-  }
+  endpoint { url = "http://loki:3100/loki/api/v1/push" }
 }
 
-// Map OTEL logs → Loki
-otelcol.processor.attributes "log_labels" {
-  action { key = "service.name" action = "insert" from_attribute = "service.name" }
-}
-
-otelcol.exporter.loki "loki_export" {
-  forward_to = [loki.write.loki.receiver]
-}
-
-// ---- Mimir (metrics via remote_write) ----
+// Mimir exporter (metrics)
 prometheus.remote_write "mimir" {
-  endpoint {
-    url = "http://mimir:9009/api/v1/push" // or Grafana Cloud Prometheus remote_write
-  }
-}
-
-// Pipelines
-otelcol.service "pipelines" {
-  traces {
-    receivers = [otelcol.receiver.otlp.in]
-    exporters = [otelcol.exporter.otlp.tempo]
-  }
-  logs {
-    receivers = [otelcol.receiver.otlp.in]
-    processors = [otelcol.processor.attributes.log_labels]
-    exporters = [otelcol.exporter.loki.loki_export]
-  }
-  metrics {
-    receivers = [otelcol.receiver.otlp.in]
-    exporters = [prometheus.remote_write.mimir]
-  }
+  endpoint { url = "http://mimir:9009/api/v1/push" }
 }

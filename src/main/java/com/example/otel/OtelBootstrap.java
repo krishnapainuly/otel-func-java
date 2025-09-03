@@ -38,17 +38,20 @@ public final class OtelBootstrap {
     var metricExporter = OtlpGrpcMetricExporter.builder().setEndpoint(endpoint).build();
     var logExporter    = OtlpGrpcLogRecordExporter.builder().setEndpoint(endpoint).build();
 
+    // tracer configuration
     var tracerProvider = SdkTracerProvider.builder()
       .addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
       .setResource(resource)
       .build();
 
+    // metric configuration
     var meterProvider = SdkMeterProvider.builder()
       .registerMetricReader(PeriodicMetricReader.builder(metricExporter)
         .setInterval(Duration.ofSeconds(10)).build())
       .setResource(resource)
       .build();
 
+ // Logs configuration
     var loggerProvider = SdkLoggerProvider.builder()
       .addLogRecordProcessor(BatchLogRecordProcessor.builder(logExporter).build())
       .setResource(resource)
